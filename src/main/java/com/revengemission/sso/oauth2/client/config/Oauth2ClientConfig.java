@@ -1,4 +1,4 @@
-package com.revengemission.sso.oauth2.client;
+package com.revengemission.sso.oauth2.client.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
@@ -18,7 +18,7 @@ import java.util.List;
 
 @Configuration
 @EnableOAuth2Client
-public class ResourceConfiguration {
+public class Oauth2ClientConfig {
 
     @Value("${security.oauth2.client.id}")
     private String id;
@@ -44,11 +44,8 @@ public class ResourceConfiguration {
     @Value("${security.oauth2.client.pre-established-redirect-uri}")
     private String preEstablishedRedirectUri;
 
-    @Value("${security.oauth2.resource.user-info-uri}")
-    private String userInfoUri;
-
     @Autowired
-    private OAuth2ClientContext oAuth2ClientContext;
+    OAuth2ClientContext oAuth2ClientContext;
 
     @Bean
     public OAuth2ProtectedResourceDetails oAuth2ProtectedResourceDetails() {
@@ -101,6 +98,12 @@ public class ResourceConfiguration {
         registration.setFilter(filter);
         registration.setOrder(-100);
         return registration;
+    }
+
+
+    @Bean
+    public OAuth2RestTemplate sparklrRestTemplate() {
+        return new OAuth2RestTemplate(oAuth2ProtectedResourceDetails(), oAuth2ClientContext);
     }
 
 

@@ -11,9 +11,9 @@ import org.springframework.boot.autoconfigure.SpringBootApplication;
 * https://github.com/spring-guides/tut-spring-boot-oauth2/blob/master/manual/src/main/java/com/example/SocialApplication.java
 * */
 @SpringBootApplication
-public class SSOClientApplication {
+public class Oauth2ClientApplication {
 
     public static void main(String[] args) {
-        SpringApplication.run(SSOClientApplication.class, args);
+        SpringApplication.run(Oauth2ClientApplication.class, args);
     }
 }

@@ -1,4 +1,4 @@
-package com.revengemission.sso.oauth2.client;
+package com.revengemission.sso.oauth2.client.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
