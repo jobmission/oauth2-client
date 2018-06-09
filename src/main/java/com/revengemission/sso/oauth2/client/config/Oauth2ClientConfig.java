@@ -69,16 +69,14 @@ public class Oauth2ClientConfig {
     public OAuth2ClientAuthenticationProcessingFilter oauth2ClientAuthenticationProcessingFilter() {
         OAuth2ClientAuthenticationProcessingFilter filter = new OAuth2ClientAuthenticationProcessingFilter(preEstablishedRedirectUri);
 
-        OAuth2RestTemplate oAuth2RestTemplate = new OAuth2RestTemplate(oAuth2ProtectedResourceDetails(), oAuth2ClientContext);
-
         RemoteTokenServices tokenService = new RemoteTokenServices();
         tokenService.setCheckTokenEndpointUrl(checkTokenUrl);
         tokenService.setClientId(clientId);
         tokenService.setClientSecret(clientSecret);
-        tokenService.setRestTemplate(oAuth2RestTemplate);
+        tokenService.setRestTemplate(oAuth2RestTemplate());
 
 
-        filter.setRestTemplate(oAuth2RestTemplate);
+        filter.setRestTemplate(oAuth2RestTemplate());
         filter.setTokenServices(tokenService);
 
 
@@ -102,7 +100,7 @@ public class Oauth2ClientConfig {
 
 
     @Bean
-    public OAuth2RestTemplate sparklrRestTemplate() {
+    public OAuth2RestTemplate oAuth2RestTemplate() {
         return new OAuth2RestTemplate(oAuth2ProtectedResourceDetails(), oAuth2ClientContext);
     }
 
