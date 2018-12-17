@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org"
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
+<head th:replace="layout-web/main :: common_header(~{::title},~{::link},~{::style})">
+    <meta charset="utf-8"/>
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1"/>
+    <!-- The above 3 meta tags *must* come first in the head; any other head content must come *after* these tags -->
+    <meta name="description" content=""/>
+    <meta name="author" content=""/>
+    <link rel="icon" href="/favicon.ico"/>
+
+    <title>登陆错误</title>
+    <style type="text/css">
+    </style>
+</head>
+
+<body>
+<section>
+    <div class="container">
+        <h3>access denied</h3>
+        <a th:href="@{/}">返回</a>
+    </div>
+</section>
+
+<th:block th:replace="layout-web/main :: common_js"/>
+<script th:inline="javascript">
+    /*<![CDATA[*/
+    $(document).ready(function () {
+    });
+    /*]]>*/
+</script>
+
+</body>
+</html>

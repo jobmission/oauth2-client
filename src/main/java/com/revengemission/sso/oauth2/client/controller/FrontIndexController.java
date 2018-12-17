@@ -6,6 +6,9 @@ import org.springframework.security.oauth2.client.OAuth2RestTemplate;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RequestParam;
 
 import javax.servlet.http.HttpServletRequest;
 import java.util.HashMap;
@@ -42,5 +45,10 @@ public class FrontIndexController {
 
 
         return "securedPage";
+    }
+
+    @RequestMapping(value = "/loginError", method = RequestMethod.GET)
+    public String loginError(Model model) {
+        return "loginError";
     }
 }
