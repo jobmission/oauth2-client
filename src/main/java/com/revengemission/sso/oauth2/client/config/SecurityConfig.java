@@ -3,6 +3,7 @@ package com.revengemission.sso.oauth2.client.config;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
+import org.springframework.security.config.annotation.web.builders.WebSecurity;
 import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
 
 @Configuration
@@ -28,6 +29,11 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
         http.oauth2Login().successHandler(customAuthenticationSuccessHandler);
 
+    }
+
+    @Override
+    public void configure(WebSecurity web) throws Exception {
+        web.ignoring().antMatchers("/assets/**", "/img/**", "/favicon.ico");
     }
 
 
