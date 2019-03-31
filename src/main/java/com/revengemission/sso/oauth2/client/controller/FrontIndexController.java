@@ -27,12 +27,12 @@ public class FrontIndexController {
         return "securedPage";
     }
 
+
     @GetMapping(value = "/error")
     public String error(HttpServletRequest request,
                         Model model) {
 
-
-        return "securedPage";
+        return "loginError";
     }
 
     @RequestMapping(value = "/loginError", method = RequestMethod.GET)

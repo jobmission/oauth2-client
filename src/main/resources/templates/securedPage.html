@@ -1,6 +1,6 @@
 <!DOCTYPE html>
 <html xmlns:th="http://www.thymeleaf.org"
->
+      xmlns:sec="http://www.thymeleaf.org/extras/spring-security">
 <head>
     <meta http-equiv="Content-Type" content="text/html; charset=utf-8"/>
     <title>Spring Security SSO</title>
@@ -16,6 +16,14 @@
             Welcome, <span th:text="${#authentication.name}">Name</span><br>
             authorities, <span th:text="${#authentication.authorities}">Name</span><br>
         </div>
+    </div>
+
+    <div sec:authorize="hasAnyAuthority('ROLE_SUPER')">
+        <span class="bg-danger">超级用户</span>
+    </div>
+
+    <div sec:authorize="hasAnyAuthority('ROLE_USER')">
+        <span class="bg-warning">普通用户</span>
     </div>
 
     <div>
