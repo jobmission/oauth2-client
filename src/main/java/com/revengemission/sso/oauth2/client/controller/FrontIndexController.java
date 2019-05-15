@@ -1,13 +1,11 @@
 package com.revengemission.sso.oauth2.client.controller;
 
+import org.springframework.security.oauth2.client.authentication.OAuth2AuthenticationToken;
 import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RequestMethod;
 
 import javax.servlet.http.HttpServletRequest;
-import java.security.Principal;
 
 @Controller
 public class FrontIndexController {
@@ -22,21 +20,9 @@ public class FrontIndexController {
 
     @GetMapping(value = "/user")
     public String user(HttpServletRequest request,
-                       Principal principal,
+                       OAuth2AuthenticationToken oAuth2AuthenticationToken,
                        Model model) {
         return "securedPage";
     }
 
-
-    @GetMapping(value = "/error")
-    public String error(HttpServletRequest request,
-                        Model model) {
-
-        return "loginError";
-    }
-
-    @RequestMapping(value = "/loginError", method = RequestMethod.GET)
-    public String loginError(Model model) {
-        return "loginError";
-    }
 }
