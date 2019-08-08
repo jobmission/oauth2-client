@@ -34,7 +34,7 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
     @Override
     public void onAuthenticationSuccess(HttpServletRequest request,
                                         HttpServletResponse response, Authentication authentication)
-            throws IOException, ServletException {
+        throws IOException, ServletException {
 
         String redirectUrl = "";
         SavedRequest savedRequest = requestCache.getRequest(request, response);
@@ -43,12 +43,12 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
         }
 
 
-        //设置回调成功的页面，设置token cookie,js携带token直接访问api接口等
+        // 根据需要设置 cookie,js携带token直接访问api接口等
         if (authentication instanceof OAuth2AuthenticationToken) {
             OAuth2AuthorizedClient client = authorizedClientService
-                    .loadAuthorizedClient(
-                            ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId(),
-                            authentication.getName());
+                .loadAuthorizedClient(
+                    ((OAuth2AuthenticationToken) authentication).getAuthorizedClientRegistrationId(),
+                    authentication.getName());
             String token = client.getAccessToken().getTokenValue();
             Cookie tokenCookie = new Cookie("access_token", token);
             tokenCookie.setHttpOnly(true);
@@ -56,6 +56,8 @@ public class CustomAuthenticationSuccessHandler extends SavedRequestAwareAuthent
             tokenCookie.setPath("/");
             response.addCookie(tokenCookie);
         }
+
+        //设置回调成功的页面，
         if (StringUtils.isNotEmpty(redirectUrl)) {
             super.onAuthenticationSuccess(request, response, authentication);
         } else {

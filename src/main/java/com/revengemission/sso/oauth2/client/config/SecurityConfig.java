@@ -23,19 +23,19 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         http.csrf().disable();
 
         http
-                .logout()
-                .logoutUrl("/logout").logoutSuccessUrl("/")
-                .and()
-                .authorizeRequests()
-                .mvcMatchers("/", "/login/**", "/assets/**")
-                .permitAll()
-                .anyRequest()
-                .authenticated()
-                .and()
-                .oauth2Login()
-                .successHandler(customAuthenticationSuccessHandler)
-                .userInfoEndpoint()
-                .userAuthoritiesMapper(this.userAuthoritiesMapper());
+            .logout()
+            .logoutUrl("/logout").logoutSuccessUrl("/")
+            .and()
+            .authorizeRequests()
+            .mvcMatchers("/", "/login/**", "/assets/**")
+            .permitAll()
+            .anyRequest()
+            .authenticated()
+            .and()
+            .oauth2Login()
+            .successHandler(customAuthenticationSuccessHandler)
+            .userInfoEndpoint()
+            .userAuthoritiesMapper(this.userAuthoritiesMapper());
 
 
     }
@@ -48,7 +48,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     /**
      * UserInfo Endpoint
      * Mapping User Authorities
-     * <p>
+     * access_token 中抽取权限信息，如角色等，默认为scope
      * https://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#oauth2login-advanced-map-authorities
      */
     private GrantedAuthoritiesMapper userAuthoritiesMapper() {
@@ -56,8 +56,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
 
             authorities.forEach(authority -> {
-//                OAuth2UserAuthority oauth2UserAuthority = (OAuth2UserAuthority) authority;
-//                Map<String, Object> userAttributes = oauth2UserAuthority.getAttributes();
+///                OAuth2UserAuthority oauth2UserAuthority = (OAuth2UserAuthority) authority;
+///                Map<String, Object> userAttributes = oauth2UserAuthority.getAttributes();
 
                 String authoritiesStr = authority.getAuthority();
                 String[] roles = authoritiesStr.split(",");
