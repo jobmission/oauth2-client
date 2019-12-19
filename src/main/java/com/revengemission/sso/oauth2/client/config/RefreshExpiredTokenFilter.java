@@ -49,7 +49,7 @@ public class RefreshExpiredTokenFilter extends OncePerRequestFilter {
     private Clock clock = Clock.systemUTC();
 
     @Autowired
-    OAuth2UserService oAuth2UserService;
+    OAuth2UserService<OAuth2UserRequest, OAuth2User> oAuth2UserService;
 
     private DefaultRefreshTokenTokenResponseClient accessTokenResponseClient;
 

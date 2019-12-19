@@ -110,6 +110,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      *
      * @return
      */
+    @SuppressWarnings("unchecked")
     @Bean
     public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
 
