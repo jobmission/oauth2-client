@@ -15,15 +15,8 @@ import org.springframework.security.config.annotation.web.configuration.WebSecur
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProvider;
-import org.springframework.security.oauth2.client.OAuth2AuthorizedClientProviderBuilder;
-import org.springframework.security.oauth2.client.registration.ClientRegistrationRepository;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
-import org.springframework.security.oauth2.client.web.DefaultOAuth2AuthorizedClientManager;
-import org.springframework.security.oauth2.client.web.OAuth2AuthorizedClientRepository;
-import org.springframework.security.oauth2.client.web.reactive.function.client.ServletOAuth2AuthorizedClientExchangeFilterFunction;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
 import org.springframework.security.oauth2.core.oidc.OidcIdToken;
 import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
@@ -32,7 +25,6 @@ import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.util.StringUtils;
-import org.springframework.web.reactive.function.client.WebClient;
 
 import java.util.*;
 
@@ -118,7 +110,8 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      *
      * @return
      */
-    private OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
+    @Bean
+    public OAuth2UserService<OAuth2UserRequest, OAuth2User> oauth2UserService() {
 
         return (userRequest) -> {
             String userNameAttributeName = userRequest.getClientRegistration().getProviderDetails().getUserInfoEndpoint().getUserNameAttributeName();
@@ -173,6 +166,7 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
      * @param authorizedClientRepository
      * @return
      */
+   /*
     @Bean
     public OAuth2AuthorizedClientManager authorizedClientManager(
         ClientRegistrationRepository clientRegistrationRepository,
@@ -198,8 +192,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     WebClient webClient(OAuth2AuthorizedClientManager authorizedClientManager) {
         ServletOAuth2AuthorizedClientExchangeFilterFunction oauth2Client =
             new ServletOAuth2AuthorizedClientExchangeFilterFunction(authorizedClientManager);
+
         return WebClient.builder()
             .apply(oauth2Client.oauth2Configuration())
             .build();
-    }
+    }*/
 }
