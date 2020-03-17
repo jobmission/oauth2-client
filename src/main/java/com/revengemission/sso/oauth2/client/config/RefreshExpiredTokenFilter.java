@@ -15,6 +15,7 @@ import org.springframework.security.oauth2.client.registration.ClientRegistratio
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
+import org.springframework.security.oauth2.core.OAuth2AuthorizationException;
 import org.springframework.security.oauth2.core.endpoint.OAuth2AccessTokenResponse;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.stereotype.Component;
@@ -39,10 +40,10 @@ public class RefreshExpiredTokenFilter extends OncePerRequestFilter {
     private static final Logger log = LoggerFactory.getLogger(RefreshExpiredTokenFilter.class);
 
     @Value("${oauth2.token.cookie.domain}")
-    private String cookieDomain;
+    String cookieDomain;
 
     @Autowired
-    private OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
+    OAuth2AuthorizedClientService oAuth2AuthorizedClientService;
 
     private Duration accessTokenExpiresSkew = Duration.ofMillis(10000);
 
@@ -72,42 +73,48 @@ public class RefreshExpiredTokenFilter extends OncePerRequestFilter {
             OAuth2AuthorizedClient authorizedClient = this.oAuth2AuthorizedClientService
                 .loadAuthorizedClient(oldOAuth2Token.getAuthorizedClientRegistrationId(), oldOAuth2Token.getName());
             /**
-             * Check if token existing token is expired.
+             * Check whether token is expired.
              */
             if (authorizedClient != null && isExpired(authorizedClient.getAccessToken())) {
 
-                log.info("===================== Token Expired , going to refresh");
-                ClientRegistration clientRegistration = authorizedClient.getClientRegistration();
-                /*
-                 * Call Auth server token endpoint to refresh token.
-                 */
-                OAuth2RefreshTokenGrantRequest refreshTokenGrantRequest = new OAuth2RefreshTokenGrantRequest(clientRegistration, authorizedClient.getAccessToken(), authorizedClient.getRefreshToken());
-                OAuth2AccessTokenResponse accessTokenResponse = this.accessTokenResponseClient.getTokenResponse(refreshTokenGrantRequest);
+                try {
+                    log.info("===================== Token Expired , trying to refresh");
+                    ClientRegistration clientRegistration = authorizedClient.getClientRegistration();
+                    /*
+                     * Call Auth server token endpoint to refresh token.
+                     */
+                    OAuth2RefreshTokenGrantRequest refreshTokenGrantRequest = new OAuth2RefreshTokenGrantRequest(clientRegistration, authorizedClient.getAccessToken(), authorizedClient.getRefreshToken());
+                    OAuth2AccessTokenResponse accessTokenResponse = this.accessTokenResponseClient.getTokenResponse(refreshTokenGrantRequest);
 
-                OAuth2User newOAuth2User = oAuth2UserService.loadUser(new OAuth2UserRequest(clientRegistration, accessTokenResponse.getAccessToken()));
+                    OAuth2User newOAuth2User = oAuth2UserService.loadUser(new OAuth2UserRequest(clientRegistration, accessTokenResponse.getAccessToken()));
 
-                log.info("===================== Token Refresh Done !");
-                /*
-                 * Create new authentication(OAuth2AuthenticationToken).
-                 */
-                OAuth2AuthenticationToken updatedUser = new OAuth2AuthenticationToken(newOAuth2User, newOAuth2User.getAuthorities(), oldOAuth2Token.getAuthorizedClientRegistrationId());
-                /*
-                 * Update access_token and refresh_token by saving new authorized client.
-                 */
-                OAuth2AuthorizedClient updatedAuthorizedClient = new OAuth2AuthorizedClient(clientRegistration,
-                    oldOAuth2Token.getName(), accessTokenResponse.getAccessToken(),
-                    accessTokenResponse.getRefreshToken());
-                this.oAuth2AuthorizedClientService.saveAuthorizedClient(updatedAuthorizedClient, updatedUser);
-                /*
-                 * Set new authentication in SecurityContextHolder.
-                 */
-                SecurityContextHolder.getContext().setAuthentication(updatedUser);
+                    /*
+                     * Create new authentication(OAuth2AuthenticationToken).
+                     */
+                    OAuth2AuthenticationToken updatedUser = new OAuth2AuthenticationToken(newOAuth2User, newOAuth2User.getAuthorities(), oldOAuth2Token.getAuthorizedClientRegistrationId());
+                    /*
+                     * Update access_token and refresh_token by saving new authorized client.
+                     */
+                    OAuth2AuthorizedClient updatedAuthorizedClient = new OAuth2AuthorizedClient(clientRegistration,
+                        oldOAuth2Token.getName(), accessTokenResponse.getAccessToken(),
+                        accessTokenResponse.getRefreshToken());
+                    this.oAuth2AuthorizedClientService.saveAuthorizedClient(updatedAuthorizedClient, updatedUser);
+                    /*
+                     * Set new authentication in SecurityContextHolder.
+                     */
+                    SecurityContextHolder.getContext().setAuthentication(updatedUser);
 
-                Cookie tokenCookie = new Cookie("access_token", accessTokenResponse.getAccessToken().getTokenValue());
-                tokenCookie.setHttpOnly(true);
-                tokenCookie.setDomain(cookieDomain);
-                tokenCookie.setPath("/");
-                response.addCookie(tokenCookie);
+                    Cookie tokenCookie = new Cookie("access_token", accessTokenResponse.getAccessToken().getTokenValue());
+                    tokenCookie.setHttpOnly(true);
+                    tokenCookie.setDomain(cookieDomain);
+                    tokenCookie.setPath("/");
+                    response.addCookie(tokenCookie);
+                    log.info("===================== Refresh Token Done !");
+                } catch (OAuth2AuthorizationException e) {
+                    log.info("Refresh ExpiredToken exception", e);
+                    SecurityContextHolder.getContext().setAuthentication(null);
+                }
+
             }
 
         }

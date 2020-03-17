@@ -1,5 +1,6 @@
 package com.revengemission.sso.oauth2.client.controller;
 
+import org.springframework.boot.web.client.RestTemplateBuilder;
 import org.springframework.http.HttpEntity;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpMethod;
@@ -18,6 +19,14 @@ import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class FrontIndexController {
+
+    RestTemplate restTemplate;
+
+    public FrontIndexController(RestTemplateBuilder restTemplateBuilder) {
+        super();
+        //可以全局配置converter等
+        this.restTemplate = restTemplateBuilder.build();
+    }
 
     @GetMapping(value = {"/", "/index"})
     public String index(HttpServletRequest request,
@@ -41,7 +50,6 @@ public class FrontIndexController {
                            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
                            Model model) {
         String url = "http://localhost:10580/coupon/list";
-        RestTemplate restTemplate = new RestTemplate();
         HttpHeaders headers = new HttpHeaders();
         headers.add("Authorization", "Bearer " + authorizedClient.getAccessToken().getTokenValue());
         ResponseEntity<Object> response = restTemplate.exchange(url, HttpMethod.GET, new HttpEntity<>(headers), Object.class);
