@@ -1,9 +1,8 @@
 package com.revengemission.sso.oauth2.client.config;
 
-import com.jayway.jsonpath.JsonPath;
-import com.jayway.jsonpath.Option;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.nimbusds.jwt.SignedJWT;
-import net.minidev.json.JSONArray;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -26,7 +25,13 @@ import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
 import org.springframework.util.StringUtils;
 
-import java.util.*;
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 @Configuration
 public class SecurityConfig extends WebSecurityConfigurerAdapter {
@@ -35,6 +40,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
 
     @Autowired
     CustomAuthenticationSuccessHandler customAuthenticationSuccessHandler;
+
+    @Autowired
+    ObjectMapper objectMapper;
 
     @Override
     public void configure(HttpSecurity http) throws Exception {
@@ -102,7 +110,6 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
         };
     }
 
-    com.jayway.jsonpath.Configuration conf = com.jayway.jsonpath.Configuration.builder().options(Option.SUPPRESS_EXCEPTIONS).build();
 
     /**
      * 从access_token中直接抽取角色等信息
@@ -123,22 +130,29 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
             Collection<GrantedAuthority> grantedAuthorities = new ArrayList<>();
             try {
                 SignedJWT jwt = SignedJWT.parse(accessToken.getTokenValue());
-                String claimJsonString = jwt.getJWTClaimsSet().toJSONObject().toJSONString();
-                Object document = com.jayway.jsonpath.Configuration.defaultConfiguration().jsonProvider().parse(claimJsonString);
+                String claimJsonString = jwt.getJWTClaimsSet().toString();
 
-                List<Object> authorities = JsonPath.using(conf).parse(document).read("$..roles");
+                Collection<String> roles = new HashSet<>();
+                JsonNode treeNode = objectMapper.readTree(claimJsonString);
+                List<JsonNode> jsonNodes = treeNode.findValues("roles");
+                jsonNodes.forEach(jsonNode -> {
+                    if (jsonNode.isArray()) {
+                        jsonNode.elements().forEachRemaining(e -> {
+                            roles.add(e.asText());
+                        });
+                    } else {
+                        roles.add(jsonNode.asText());
+                    }
+                });
 
-                if (authorities == null || authorities.size() == 0) {
-                    authorities = JsonPath.using(conf).parse(document).read("$..authorities");
-                }
-                Collection<String> roles = new ArrayList<>();
-                authorities.forEach(authorityItem -> {
-                    if (authorityItem instanceof String) {
-                        roles.add((String) authorityItem);
-                    } else if (authorityItem instanceof JSONArray) {
-                        roles.addAll((Collection<String>) authorityItem);
-                    } else if (authorityItem instanceof Collection) {
-                        roles.addAll((Collection<String>) authorityItem);
+                jsonNodes = treeNode.findValues("authorities");
+                jsonNodes.forEach(jsonNode -> {
+                    if (jsonNode.isArray()) {
+                        jsonNode.elements().forEachRemaining(e -> {
+                            roles.add(e.asText());
+                        });
+                    } else {
+                        roles.add(jsonNode.asText());
                     }
                 });
 
@@ -146,9 +160,9 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
                     grantedAuthorities.add(new SimpleGrantedAuthority(authority));
                 }
                 Map<String, Object> userAttributes = new HashMap<>(16);
-                userAttributes.put(userNameAttributeName, JsonPath.using(conf).parse(document).read("$." + userNameAttributeName));
-                userAttributes.put("preferred_username", JsonPath.using(conf).parse(document).read("$.preferred_username"));
-                userAttributes.put("email", JsonPath.using(conf).parse(document).read("$.email"));
+                userAttributes.put(userNameAttributeName, treeNode.findValue(userNameAttributeName));
+                userAttributes.put("preferred_username", treeNode.findValue("preferred_username"));
+                userAttributes.put("email", treeNode.findValue("email"));
                 OAuth2User oAuth2User = new DefaultOAuth2User(grantedAuthorities, userAttributes, userNameAttributeName);
 
                 return oAuth2User;
