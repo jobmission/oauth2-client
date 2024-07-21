@@ -9,32 +9,23 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
-import org.springframework.security.config.annotation.web.builders.WebSecurity;
-import org.springframework.security.config.annotation.web.configuration.WebSecurityConfigurerAdapter;
+import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
+import org.springframework.security.config.annotation.web.configurers.AbstractHttpConfigurer;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.authority.mapping.GrantedAuthoritiesMapper;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserRequest;
 import org.springframework.security.oauth2.client.userinfo.OAuth2UserService;
 import org.springframework.security.oauth2.core.OAuth2AccessToken;
-import org.springframework.security.oauth2.core.oidc.OidcIdToken;
-import org.springframework.security.oauth2.core.oidc.OidcUserInfo;
-import org.springframework.security.oauth2.core.oidc.user.OidcUserAuthority;
 import org.springframework.security.oauth2.core.user.DefaultOAuth2User;
 import org.springframework.security.oauth2.core.user.OAuth2User;
-import org.springframework.security.oauth2.core.user.OAuth2UserAuthority;
+import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.util.StringUtils;
 
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
-import java.util.HashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
+@EnableWebSecurity
 @Configuration
-public class SecurityConfig extends WebSecurityConfigurerAdapter {
+public class SecurityConfig {
 
     private Logger log = LoggerFactory.getLogger(this.getClass());
 
@@ -44,72 +35,23 @@ public class SecurityConfig extends WebSecurityConfigurerAdapter {
     @Autowired
     ObjectMapper objectMapper;
 
-    @Override
-    public void configure(HttpSecurity http) throws Exception {
-        http.csrf().disable();
+    @Bean
+    SecurityFilterChain securityFilterChain(HttpSecurity http) throws Exception {
 
-        http
-            .logout()
-            .logoutUrl("/logout").logoutSuccessUrl("/")
-            .and()
-            .authorizeRequests()
-            .mvcMatchers("/", "/login/**", "/assets/**")
-            .permitAll()
-            .anyRequest()
-            .authenticated()
-            .and()
-            .oauth2Login()
-            .successHandler(customAuthenticationSuccessHandler)
-            .userInfoEndpoint().userService(oauth2UserService());
+        http.authorizeHttpRequests(requestMatcherRegistry ->
+                requestMatcherRegistry.requestMatchers("/", "/login/**", "/oauth2/**", "/assets/**").permitAll()
+                    .anyRequest().authenticated())
+            .csrf(AbstractHttpConfigurer::disable)
+            .logout(logoutCustomizer ->
+                logoutCustomizer
+                    .logoutUrl("/logout")
+                    .logoutSuccessUrl("/"))
+            .oauth2Login(oauth2Login ->
+                oauth2Login.successHandler(customAuthenticationSuccessHandler)
+                    .userInfoEndpoint(userInfoEndpointConfig -> userInfoEndpointConfig.userService(oauth2UserService())));
 
+        return http.build();
     }
-
-    @Override
-    public void configure(WebSecurity web) {
-        web.ignoring().mvcMatchers("/assets/**", "/img/**", "/favicon.ico");
-    }
-
-    /**
-     * 从user-info-uri 返回结果中抽取权限信息，如角色等，默认为scope
-     * Mapping User Authorities
-     * https://docs.spring.io/spring-security/site/docs/current/reference/htmlsingle/#oauth2login-advanced-map-authorities
-     */
-    @Deprecated
-    private GrantedAuthoritiesMapper userAuthoritiesMapper() {
-        return (authorities) -> {
-            Set<GrantedAuthority> mappedAuthorities = new HashSet<>();
-
-            authorities.forEach(authority -> {
-                if (OidcUserAuthority.class.isInstance(authority)) {
-                    OidcUserAuthority oidcUserAuthority = (OidcUserAuthority) authority;
-                    OidcIdToken idToken = oidcUserAuthority.getIdToken();
-                    OidcUserInfo userInfo = oidcUserAuthority.getUserInfo();
-
-                    System.out.println(oidcUserAuthority);
-
-                    // Map the claims found in idToken and/or userInfo
-                    // to one or more GrantedAuthority's and add it to mappedAuthorities
-
-                } else if (OAuth2UserAuthority.class.isInstance(authority)) {
-                    OAuth2UserAuthority oauth2UserAuthority = (OAuth2UserAuthority) authority;
-
-                    Map<String, Object> userAttributes = oauth2UserAuthority.getAttributes();
-                    System.out.println(userAttributes);
-                    // Map the attributes found in userAttributes
-                    // to one or more GrantedAuthority's and add it to mappedAuthorities
-
-                } else if (SimpleGrantedAuthority.class.isInstance(authority)) {
-                    SimpleGrantedAuthority simpleGrantedAuthority = (SimpleGrantedAuthority) authority;
-
-                    System.out.println(simpleGrantedAuthority);
-
-                }
-            });
-
-            return mappedAuthorities;
-        };
-    }
-
 
     /**
      * 从access_token中直接抽取角色等信息

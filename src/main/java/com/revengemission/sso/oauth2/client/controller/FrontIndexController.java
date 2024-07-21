@@ -15,7 +15,6 @@ import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.ResponseBody;
 import org.springframework.web.client.RestTemplate;
 
-import javax.servlet.http.HttpServletRequest;
 
 @Controller
 public class FrontIndexController {
@@ -29,24 +28,23 @@ public class FrontIndexController {
     }
 
     @GetMapping(value = {"/", "/index"})
-    public String index(HttpServletRequest request,
-                        Authentication authentication,
+    public String index(Authentication authentication,
                         Model model) {
         return "index";
     }
 
     @GetMapping(value = "/user")
-    public String user(HttpServletRequest request,
-                       OAuth2AuthenticationToken oAuth2AuthenticationToken,
+    public String user(OAuth2AuthenticationToken oAuth2AuthenticationToken,
+                       Authentication authentication,
                        @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
                        Model model) {
+        model.addAttribute("authentication", authentication);
         return "securedPage";
     }
 
     @ResponseBody
     @GetMapping(value = "/resource")
-    public Object resource(HttpServletRequest request,
-                           OAuth2AuthenticationToken oAuth2AuthenticationToken,
+    public Object resource(OAuth2AuthenticationToken oAuth2AuthenticationToken,
                            @RegisteredOAuth2AuthorizedClient OAuth2AuthorizedClient authorizedClient,
                            Model model) {
         String url = "http://localhost:10580/coupon/list";
